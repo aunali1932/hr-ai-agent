@@ -17,11 +17,10 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="HR AI Agent API", version="1.0.0")
 
-# CORS middleware - Allow ALL origins (for development/testing only!)
-# WARNING: This is insecure for production. Use specific origins in production.
+# CORS middleware - Get allowed origins from environment variables
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r".*",  # Allow ALL origins
+    allow_origins=settings.cors_origins_list,  # From CORS_ORIGINS env variable
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
