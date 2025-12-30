@@ -26,6 +26,26 @@ def extract_from_message(message: str, extract_type: str) -> Optional[str]:
     tomorrow = (today + timedelta(days=1)).strftime("%Y-%m-%d")
     
     if extract_type == "leave_type":
+        # First, check if it's a numeric choice (1, 2, 3)
+        message_stripped = message.strip().lower()
+        
+        # Handle numeric inputs
+        if message_stripped == "1" or message_stripped == "1.":
+            return "sick"
+        elif message_stripped == "2" or message_stripped == "2.":
+            return "annual"
+        elif message_stripped == "3" or message_stripped == "3.":
+            return "parental"
+        
+        # Handle direct keyword matches (case-insensitive)
+        if "sick" in message_stripped:
+            return "sick"
+        elif "annual" in message_stripped or "vacation" in message_stripped or "holiday" in message_stripped:
+            return "annual"
+        elif "parental" in message_stripped or "maternity" in message_stripped or "paternity" in message_stripped:
+            return "parental"
+        
+        # If not a simple match, use Gemini to extract
         prompt = f"""Extract the leave type from the user's message. 
         
 Valid leave types are:
