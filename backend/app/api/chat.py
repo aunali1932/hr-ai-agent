@@ -1,12 +1,12 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 import uuid
 from app.database import get_db
 from app.models.chat_session import ChatSession
 from app.models.user import User
-from app.schemas.chat import ChatMessage, ChatResponse
+from app.schemas.chat import ChatMessage, ChatResponse, ChatHistoryResponse, ChatHistoryItem
 from app.api.auth import get_current_user
 from app.graphs.chat_graph import chat_graph
 from app.graphs.nodes.intent_classifier import ChatState
@@ -97,4 +97,58 @@ async def chat(
     except Exception as e:
         logger.error(f"Error processing chat: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing chat message: {str(e)}")
+
+
+@router.get("/history/{session_id}", response_model=ChatHistoryResponse)
+async def get_chat_history(
+    session_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get chat history for a specific session"""
+    logger.info(f"Fetching chat history for session: {session_id}, user: {current_user.id}")
+    
+    # Get all chat sessions for this session_id and user
+    chat_sessions = db.query(ChatSession).filter(
+        ChatSession.session_id == session_id,
+        ChatSession.user_id == current_user.id
+    ).order_by(ChatSession.created_at.asc()).all()
+    
+    if not chat_sessions:
+        logger.info(f"No chat history found for session: {session_id}")
+        return ChatHistoryResponse(session_id=session_id, messages=[])
+    
+    # Convert to response format
+    messages = [
+        ChatHistoryItem(
+            id=session.id,
+            message=session.message,
+            response=session.response,
+            intent=session.intent,
+            created_at=session.created_at
+        )
+        for session in chat_sessions
+    ]
+    
+    logger.info(f"Found {len(messages)} messages in session: {session_id}")
+    return ChatHistoryResponse(session_id=session_id, messages=messages)
+
+
+@router.get("/sessions", response_model=List[str])
+async def get_user_sessions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all session IDs for the current user"""
+    logger.info(f"Fetching all sessions for user: {current_user.id}")
+    
+    # Get distinct session IDs for this user
+    sessions = db.query(ChatSession.session_id).filter(
+        ChatSession.user_id == current_user.id
+    ).distinct().all()
+    
+    session_ids = [session[0] for session in sessions if session[0]]
+    logger.info(f"Found {len(session_ids)} sessions for user: {current_user.id}")
+    
+    return session_ids
 

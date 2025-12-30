@@ -7,6 +7,7 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -16,6 +17,50 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load session_id from localStorage on mount
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('chat_session_id');
+    if (savedSessionId) {
+      setSessionId(savedSessionId);
+    }
+  }, []);
+
+  // Load chat history when session_id is available
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!sessionId) return;
+      
+      setLoadingHistory(true);
+      try {
+        const response = await api.get(`/api/chat/history/${sessionId}`);
+        const historyMessages = response.data.messages || [];
+        
+        // Convert history format to message format
+        const formattedMessages = [];
+        historyMessages.forEach((item) => {
+          formattedMessages.push({
+            role: 'user',
+            content: item.message,
+          });
+          formattedMessages.push({
+            role: 'assistant',
+            content: item.response,
+            intent: item.intent,
+          });
+        });
+        
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        // If history doesn't exist or error, just continue with empty messages
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, [sessionId]);
 
   const handleSendMessage = async (message) => {
     if (!message.trim()) return;
@@ -31,9 +76,10 @@ const ChatInterface = () => {
         session_id: sessionId,
       });
 
-      // Update session ID if provided
+      // Update session ID if provided and save to localStorage
       if (response.data.session_id) {
         setSessionId(response.data.session_id);
+        localStorage.setItem('chat_session_id', response.data.session_id);
       }
 
       // Add assistant response
@@ -59,7 +105,12 @@ const ChatInterface = () => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
+        {loadingHistory && (
+          <div className="text-center text-gray-500 mt-8">
+            <p>Loading conversation history...</p>
+          </div>
+        )}
+        {!loadingHistory && messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
             <p className="text-lg font-semibold mb-2">Welcome to HR AI Agent!</p>
             <p>Ask me about company policies or request leave.</p>

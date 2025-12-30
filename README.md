@@ -74,7 +74,7 @@ An intelligent HR assistant built with FastAPI, React, LangGraph, and Google Gem
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/aunali1932/hr-ai-agent
 cd hr-ai-agent
 ```
 
@@ -102,14 +102,10 @@ cp env.example .env
 
 # Set up Alembic migrations (see backend/ALEMBIC_SETUP.md for detailed guide)
 # Step 1: Create the database
-# psql -U postgres -c "CREATE DATABASE hr_ai_agent;"
+# psql -U postgres -c "CREATE DATABASE hr_ai_agent;" or through pg admin
 
-# Step 2: Generate initial migration
-alembic revision --autogenerate -m "Initial migration - users, hr_requests, chat_sessions"
 
-# Step 3: Review the generated migration file in alembic/versions/
-
-# Step 4: Apply the migration
+# Step 2: Apply the migration
 alembic upgrade head
 
 # Seed sample users
@@ -141,10 +137,8 @@ The frontend will be available at `http://localhost:3000`
 #### Option 1: Embedded Mode (Local Development)
 Qdrant will run embedded in the Python process. No additional setup needed.
 
-#### Option 2: Docker (Recommended)
-```bash
-docker run -p 6333:6333 qdrant/qdrant
-```
+#### Option 2: Qdrant Cloud (Recommended)
+Just paste your Qdrant Cloud host and API key in the env
 
 ## Default Test Credentials
 
@@ -236,14 +230,11 @@ hr-ai-agent/
 
 ## Assumptions and Design Decisions
 
-1. **Authentication**: Simple JWT-based auth with email/password (no OAuth for MVP)
-2. **Vector DB**: Qdrant embedded mode for local development
-3. **LLM**: Google Gemini 1.5 Flash for speed and cost-effectiveness
-4. **Policy Format**: Plain text (.txt) files for simplicity
-5. **Roles**: Two roles only - "HR" and "employee"
-6. **Request Approval**: Manual approval by HR users via dashboard
-7. **No Email Notifications**: Approval status visible only in UI for MVP
-8. **Local Development Only**: Focus on MVP functionality
+
+1. **Policy Format**: Plain text (.txt) files for simplicity
+2. **Roles**: Two roles only - "HR" and "employee"
+3. **Request Approval**: Manual approval by HR users via dashboard
+4. **No Email Notifications**: Approval status visible only in UI for this assesment
 
 ## Future Enhancements
 
@@ -253,12 +244,8 @@ hr-ai-agent/
 - Advanced analytics dashboard (leave trends, policy usage)
 - Multi-language support
 - Voice input/output for accessibility
-- Integration with calendar systems (Google Calendar, Outlook)
 - Export reports (PDF, Excel)
 - Multi-tenancy for different companies
-- Audit logs for compliance
-- Mobile app (React Native)
-- Deployment guides for AWS/GCP
 
 ## Troubleshooting
 
@@ -284,7 +271,5 @@ hr-ai-agent/
 
 This project is for assessment purposes.
 
-## Contact
 
-For questions about the requirements, contact the assessment coordinator.
 

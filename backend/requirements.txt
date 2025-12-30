@@ -7,7 +7,7 @@ python-dotenv
 pydantic
 pydantic[email]
 pydantic-settings
-google-genai
+google-generativeai
 qdrant-client
 langgraph
 langchain-core
